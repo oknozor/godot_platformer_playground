@@ -25,9 +25,9 @@ func _change_state(new_state):
 func _physics_process(delta):
 	var bodies = get_overlapping_bodies()
 	for body in bodies:
-		if body.is_a_parent_of(self) and not body.has_node("Health"): 
-			continue 
-		body.queue_free()
+		if body.has_node("Health") and not body.is_a_parent_of(self):
+			print("HIT!")
+			body.get_node("Health").take_damage(1)
 			
 func attack():
 	_change_state(States.ATTACK)
