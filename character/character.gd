@@ -1,5 +1,7 @@
- extends KinematicBody2D
+extends KinematicBody2D
 class_name Character
+
+signal state_changed 
 
 const UP = Vector2(0, -1)
 var motion = Vector2()
@@ -10,17 +12,21 @@ var controls = null
 var friction = false  
 const MAX_SPEED = 1000
 const ACCELERATION = 50 
-const JUMP = -2000
-const GRAVITY = 90
+const JUMP = - 250
+const JUMP_CAP = - 1750
+const GRAVITY = 100
+
+var can_jump = true 
 
 export(String) var control_right
 export(String) var control_left
 export(String) var control_up
 export(String) var control_down
+export(String) var control_jump
 export(String) var control_attack
 
 enum Direction { LEFT, RIGHT, UP, DOWN } 
-enum State { IDLE, ATTACK, RESPAWN }
+enum State { IDLE, ATTACK, HIT, RESPAWN, JUMP, JUMP_CONSUMED }
 	
 func _ready(): 
 	sword = $DirectionHelper/SwordSpawn/Sword
@@ -30,19 +36,13 @@ func _ready():
 func _change_state(new_state): 
 	match new_state: 
 		State.IDLE:
-			continue
+			$AnimationPlayer.play("idle")
 		State.ATTACK:
 			sword.attack()
-		State.RESPAWN:
-			self.position = Vector2(0, -1000)
-#			self.respawn()
-			_change_state(State.IDLE)
+			
+		
 	state = new_state
 	emit_signal("state_changed", new_state) 
-
-#func respawn():
-	
-	
 	
 func _physics_process(delta) -> void:
 	motion.y += GRAVITY
@@ -70,26 +70,35 @@ func _physics_process(delta) -> void:
 		friction = true
 	if Input.is_action_just_pressed(control_attack):
 		_change_state(State.ATTACK)
-		
+	
 	if is_on_floor():
+		motion.y = 0
+		
 		if friction == true:
-			motion.x = lerp(motion.x, 0, 0.2)
-		if Input.is_action_pressed(control_up):
-			motion.y = JUMP
+			motion.x *= 0.8
+		if Input.is_action_just_pressed(control_jump):
+			motion.y *= JUMP
+		can_jump = true
+	elif is_on_ceiling():
+		Input.action_release(control_jump)
+		motion.y = 0 
 	else:
+		if can_jump and motion.y > JUMP_CAP and Input.is_action_pressed(control_jump):
+			print("motion Y :", motion.y) 
+			motion.y += JUMP
+		elif motion.y < JUMP_CAP or Input.is_action_just_released(control_jump):  
+			can_jump = false
 		if friction == true:
-			motion.x = lerp(motion.x, 0, 0.05)
+			motion.x *= 0.95
 		
 	move_and_slide(motion, UP)
-
-
+	
 func _on_Sword_attack_finished():
 	print("attack finished") 
 	_change_state(State.IDLE)
 
 func _on_Health_health_changed(new_health):
-	if new_health == 0:
-		_change_state(State.RESPAWN) 
+		_change_state(State.HIT) 
 	
 	
 

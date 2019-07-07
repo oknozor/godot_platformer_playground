@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://character/direction_visualizer.gd" type="Script" id=1]
 [ext_resource path="res://character/character.gd" type="Script" id=2]
@@ -9,6 +9,37 @@
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 40, 59.6098 )
+
+[sub_resource type="Animation" id=2]
+resource_name = "death"
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:rotation_degrees")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ 0.0, -89.1181 ]
+}
+
+[sub_resource type="Animation" id=3]
+length = 0.001
+step = 0.01
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:rotation_degrees")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ 0.0 ]
+}
 
 [node name="Player" type="KinematicBody2D"]
 collision_layer = 3
@@ -53,5 +84,9 @@ margin_right = 20.0
 margin_bottom = -76.0
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/death = SubResource( 2 )
+anims/idle = SubResource( 3 )
 
 [node name="Tween" type="Tween" parent="."]
+
+[node name="Timer" type="Timer" parent="."]
