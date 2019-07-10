@@ -1,53 +1,69 @@
-extends KinematicBody2D
-class_name Character
+extends "res://character/Character.gd"
 
 signal state_changed 
 
-const UP = Vector2(0, -1)
-var motion = Vector2()
-var sword = null 
-var state
-var _current_direction = Direction.RIGHT
-var controls = null
-var friction = false  
+
+const GRAVITY = 100
 const MAX_SPEED = 1000
 const ACCELERATION = 50 
-const JUMP = - 250
+const JUMP = - 300
 const JUMP_CAP = - 1750
-const GRAVITY = 100
 
+onready var sword = self.get_node("DirectionHelper/SwordSpawn/Sword")
+onready var health = self.get_node("Health")
+var state
+var _current_direction = Direction.RIGHT
+var friction = false 
+
+var motion = Vector2()
 var can_jump = true 
 
-export(String) var control_right
-export(String) var control_left
-export(String) var control_up
-export(String) var control_down
-export(String) var control_jump
-export(String) var control_attack
+# Controls
+export(String) onready var control_right
+export(String) onready var control_left
+export(String) onready var control_up
+export(String) onready var control_down
+export(String) onready var control_jump
+export(String) onready var control_attack
 
-enum Direction { LEFT, RIGHT, UP, DOWN } 
+
 enum State { IDLE, ATTACK, HIT, RESPAWN, JUMP, JUMP_CONSUMED }
-	
+
+
 func _ready(): 
-	sword = $DirectionHelper/SwordSpawn/Sword
 	sword.connect("attack_finished", self, "_on_Sword_attack_finished")
-	$Health.connect("health_changed", self, "_on_Health_health_changed")
+	health.connect("health_changed", self, "_on_Health_health_changed")
+
+
 
 func _change_state(new_state): 
 	match new_state: 
 		State.IDLE:
-			$AnimationPlayer.play("idle")
+			print("unimplemented")
 		State.ATTACK:
 			sword.attack()
 			
 		
 	state = new_state
 	emit_signal("state_changed", new_state) 
-	
+
+
+
 func _physics_process(delta) -> void:
 	motion.y += GRAVITY
 	friction = false 
+	_process_input_direction()
+
+	if Input.is_action_just_pressed(control_attack):
+		_change_state(State.ATTACK)
 	
+	_process_physics()
+		
+	move_and_slide(motion, UP)
+
+
+
+func _process_input_direction(): 
 	if Input.is_action_pressed(control_left):
 		_current_direction = Direction.LEFT
 		$DirectionHelper.set_direction(Vector2(1, 0) ) 
@@ -65,19 +81,18 @@ func _physics_process(delta) -> void:
 	elif Input.is_action_pressed(control_down):
 		$DirectionHelper.set_direction(Vector2(0, -1)) 
 		_current_direction = Direction.DOWN
-		
 	else:
 		friction = true
-	if Input.is_action_just_pressed(control_attack):
-		_change_state(State.ATTACK)
-	
+
+
+func _process_physics():
 	if is_on_floor():
 		motion.y = 0
 		
 		if friction == true:
 			motion.x *= 0.8
 		if Input.is_action_just_pressed(control_jump):
-			motion.y *= JUMP
+			motion.y += JUMP
 		can_jump = true
 	elif is_on_ceiling():
 		Input.action_release(control_jump)
@@ -90,15 +105,12 @@ func _physics_process(delta) -> void:
 			can_jump = false
 		if friction == true:
 			motion.x *= 0.95
-		
-	move_and_slide(motion, UP)
-	
+
+
+# Signals 
 func _on_Sword_attack_finished():
 	print("attack finished") 
 	_change_state(State.IDLE)
 
 func _on_Health_health_changed(new_health):
 		_change_state(State.HIT) 
-	
-	
-

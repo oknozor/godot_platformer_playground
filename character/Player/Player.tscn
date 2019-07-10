@@ -1,0 +1,31 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://character/Character.tscn" type="PackedScene" id=1]
+[ext_resource path="res://character/Player/Player.gd" type="Script" id=2]
+[ext_resource path="res://assets/character.png" type="Texture" id=4]
+[ext_resource path="res://character/Sword/sword.tscn" type="PackedScene" id=5]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 32, 32 )
+
+[node name="Player" index="0" instance=ExtResource( 1 )]
+script = ExtResource( 2 )
+
+[node name="SwordSpawn" type="Position2D" parent="DirectionHelper" index="1"]
+position = Vector2( -64, 0 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="Sword" parent="DirectionHelper/SwordSpawn" index="0" instance=ExtResource( 5 )]
+
+[node name="Node2D" type="Node2D" parent="." index="2"]
+
+[node name="Sprite" type="Sprite" parent="." index="3"]
+texture = ExtResource( 4 )
+
+[node name="CollisionShape2D" parent="." index="4"]
+shape = SubResource( 1 )
+
+[node name="Camera2D" type="Camera2D" parent="." index="5"]
+current = true

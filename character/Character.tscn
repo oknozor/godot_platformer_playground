@@ -1,92 +1,46 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=4 format=2]
 
-[ext_resource path="res://character/direction_visualizer.gd" type="Script" id=1]
-[ext_resource path="res://character/character.gd" type="Script" id=2]
-[ext_resource path="res://assets/guide.png" type="Texture" id=3]
-[ext_resource path="res://assets/character.png" type="Texture" id=4]
-[ext_resource path="res://character/Sword/sword.tscn" type="PackedScene" id=5]
-[ext_resource path="res://character/Heath.gd" type="Script" id=6]
+[ext_resource path="res://character/Character.gd" type="Script" id=2]
+[ext_resource path="res://character/DirectionHelper.gd" type="Script" id=3]
 
-[sub_resource type="RectangleShape2D" id=1]
-extents = Vector2( 40, 59.6098 )
+[sub_resource type="GDScript" id=1]
+script/source = "
+extends Node
 
-[sub_resource type="Animation" id=2]
-resource_name = "death"
-tracks/0/type = "value"
-tracks/0/path = NodePath(".:rotation_degrees")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0, 1 ),
-"transitions": PoolRealArray( 1, 1 ),
-"update": 0,
-"values": [ 0.0, -89.1181 ]
-}
+var health = 0
+signal health_changed
+export(int) var max_health = 1 
 
-[sub_resource type="Animation" id=3]
-length = 0.001
-step = 0.01
-tracks/0/type = "value"
-tracks/0/path = NodePath(".:rotation_degrees")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0 ),
-"transitions": PoolRealArray( 1 ),
-"update": 0,
-"values": [ 0.0 ]
-}
+func _ready():
+	health = max_health
 
-[node name="Player" type="KinematicBody2D"]
-collision_layer = 3
-collision_mask = 3
+
+func take_damage(amount):
+	print(\"taking damage\")
+	health -= amount 
+	if health < 0: 
+		health = 0
+	emit_signal(\"health_changed\", health)
+	print(\"%s took %s damage :  %s/%s\"  % [get_path(), amount, health, max_health])
+	
+func recover_health(amount):
+	health += amount
+	if health > max_health:
+		health = max_health
+	emit_signal(\"health_changed\", health)
+	print(\"%s recoverd %s life :  %s/%s\"  % [get_path(), amount, health, max_health])
+
+"
+
+[node name="Character" type="KinematicBody2D"]
 script = ExtResource( 2 )
-__meta__ = {
-"_edit_group_": true
-}
-
-[node name="Sprite" type="Sprite" parent="."]
-position = Vector2( 0, -0.463289 )
-scale = Vector2( 1.17647, 1.74877 )
-texture = ExtResource( 4 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource( 1 )
 
 [node name="Health" type="Node" parent="."]
-script = ExtResource( 6 )
+script = SubResource( 1 )
 
 [node name="DirectionHelper" type="Position2D" parent="."]
-position = Vector2( -1, 0 )
-script = ExtResource( 1 )
+script = ExtResource( 3 )
 
 [node name="Arrow" type="Sprite" parent="DirectionHelper"]
-position = Vector2( -119, 0 )
-scale = Vector2( 0.292282, 0.165803 )
-texture = ExtResource( 3 )
-
-[node name="SwordSpawn" type="Position2D" parent="DirectionHelper"]
-position = Vector2( -69, 0 )
-__meta__ = {
-"_edit_group_": true
-}
-
-[node name="Sword" parent="DirectionHelper/SwordSpawn" instance=ExtResource( 5 )]
-
-[node name="StateLabel" type="Label" parent="."]
-margin_left = -20.0
-margin_top = -90.0
-margin_right = 20.0
-margin_bottom = -76.0
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/death = SubResource( 2 )
-anims/idle = SubResource( 3 )
-
-[node name="Tween" type="Tween" parent="."]
-
-[node name="Timer" type="Timer" parent="."]
